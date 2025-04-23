@@ -1,0 +1,28 @@
+[project]
+name = "active-recall-system"
+version = "0.1.0"
+description = ""
+authors = [
+    {name = "Abdul Wahab",email = "wahabbasa@gmail.com"}
+]
+readme = "README.md"
+requires-python = "^3.11"
+dependencies = [
+    "instructor (>=1.7.9,<2.0.0)",
+    "pydantic (>=2.9.2,<3.0.0)",
+    "atomic-agents (>=1.1.0,<2.0.0)",
+    "python-dotenv (>=1.1.0,<2.0.0)",
+    "openai (>=1.75.0,<2.0.0)",
+    "rich (>=13.7.0,<14.0.0)",
+    "pypdf2 (>=3.0.1,<4.0.0)"
+    
+
+]
+
+[tool.poetry]
+packages = [{include = "active_recall_system"}]
+
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
