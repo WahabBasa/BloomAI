@@ -1,8 +1,0 @@
-{
-  "questionId": "6f93e1ef-6688-4b1e-b93b-28bccffa2cf7",
-  "question": "What are the subtractive color primaries in the CMY color model and how do they differ from the RGB color model?",
-  "explanation": "The subtractive color primaries in the CMY color model are Cyan (C), Magenta (M), and Yellow (Y). These differ from the RGB color model, which uses Red (R), Green (G), and Blue (B) as its primary colors. The key difference lies in their additive versus subtractive nature: RGB combines light to produce colors, while CMY subtracts light by absorbing certain wavelengths. For instance, yellow pigment subtracts blue light from white illumination, making it appear yellow, while satellite colors are formed by the subtraction of the opposite primary colors (e.g., cyan reflects green and blue, absorbing red).",
-  "sourceContent": "",
-  "userAnswer": null,
-  "mark": null
-}

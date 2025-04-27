@@ -1,8 +1,0 @@
-{
-  "questionId": "7c32e2d3-af79-43e0-9337-483514eae2cd",
-  "question": "Explain the concept of undercolor removal in the CMYK system and its purpose in printing.",
-  "explanation": "Undercolor removal in the CMYK system is a technique used in printing to enhance color precision and reduce ink usage. The CMYK system consists of Cyan, Magenta, Yellow, and Black (Key). Undercolor removal calculates the amount of black that would mix with the CMY colors to achieve a certain color and then removes this black amount from the CMY components, adding real black ink instead. This process results in sharper and more cost-effective colors, as it enables the printer to use less ink while maintaining quality by alleviating unwanted color mixing in shadow areas.",
-  "sourceContent": "",
-  "userAnswer": null,
-  "mark": null
-}

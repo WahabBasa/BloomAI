@@ -1,8 +1,0 @@
-{
-  "questionId": "14fdf91c-f8c5-4aae-91bb-2dd492b150d0",
-  "question": "How does image formation occur in terms of light, surface reflectance, and eye sensitivity?",
-  "explanation": "Image formation occurs when light from an illuminant (light source) interacts with a surface, which reflects different amounts of light at various wavelengths based on its spectral reflectance. The reflected light is then processed by the cones in the eye, which have their own sensitivity functions. The output of this process, termed the color signal (C(\u03bb)) is computed as the product of the illuminant's spectral power distribution (E(\u03bb)) and the surface's reflectance function (S(\u03bb)). This means the perceived color is the result of the combination of light characteristics and the surface properties that it interacts with.",
-  "sourceContent": "",
-  "userAnswer": "Wavelengths are porduce from a light source. and depending on the surface the light lands on it either absorbs or reflects. if say we the suface was red. then all the other colour wave lengths are absorbed and the red is reflected back to the eye. where the rods and cons detect the colour as well as the light intensity.",
-  "mark": 50
-}

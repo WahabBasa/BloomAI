@@ -1,8 +1,0 @@
-{
-  "questionId": "a9b31b29-2bc9-4531-b957-b3b426df643c",
-  "question": "Describe the role of rods and cones in the human retina regarding light perception.",
-  "explanation": "In the human retina, there are two types of photoreceptor cells: rods and cones. Rods are responsible for vision in low light and can detect light intensity, resulting in shades of gray. In contrast, cones operate under brighter light conditions and are sensitive to color; they come in three types, each sensitive to red (R), green (G), and blue (B) light. The eye contains about 120 million rods and 6 million cones, making the cones crucial for color discrimination and detailed vision.",
-  "sourceContent": "",
-  "userAnswer": "rods are for the light intensity measured in greyscale. Whereas cons are for identifying the colours which are red,green and blue",
-  "mark": 100
-}

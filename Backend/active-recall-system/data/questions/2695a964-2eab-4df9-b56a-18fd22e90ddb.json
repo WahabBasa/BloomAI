@@ -1,8 +1,0 @@
-{
-  "questionId": "2695a964-2eab-4df9-b56a-18fd22e90ddb",
-  "question": "What are the visible wavelengths detected by humans, and what colors correspond to short and long wavelengths?",
-  "explanation": "The visible wavelengths that humans can detect range from approximately 400 nanometers (nm) to 700 nm. In this range, short wavelengths (around 400 nm) produce a blue sensation, whereas long wavelengths (around 700 nm) produce a red sensation. This means that the human visual system is sensitive to a spectrum of light defined between these limits, with color perception varying according to these wavelengths.",
-  "sourceContent": "",
-  "userAnswer": "between 300 and 400",
-  "mark": 0
-}
