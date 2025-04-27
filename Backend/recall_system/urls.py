@@ -16,7 +16,22 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path
+from main_system import views
 
 urlpatterns = [
+    # Admin site
     path('admin/', admin.site.urls),
+    
+    # Document Management Endpoints
+    path('api/documents/', views.get_documents, name='get_documents'),
+    path('api/documents/upload/', views.upload_document, name='upload_document'),
+    path('api/documents/<str:document_id>/', views.get_document, name='get_document'),
+    
+    # Question Endpoints
+    path('api/documents/<str:document_id>/questions/', views.get_questions, name='get_questions'),
+    path('api/questions/<str:question_id>/', views.get_question, name='get_question'),
+    
+    # Answer Endpoints
+    path('api/questions/<str:question_id>/answer/', views.submit_answer, name='submit_answer'),
+    path('api/answers/<str:answer_id>/', views.get_answer, name='get_answer'),
 ]
