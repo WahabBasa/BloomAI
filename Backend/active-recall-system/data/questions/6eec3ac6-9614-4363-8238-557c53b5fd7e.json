@@ -1,0 +1,8 @@
+{
+  "questionId": "6eec3ac6-9614-4363-8238-557c53b5fd7e",
+  "question": "Why do we need to use approximately 12 bits per color channel in the RGB color model to avoid aliasing effects?",
+  "explanation": "We need to use approximately 12 bits per color channel in the RGB color model to avoid aliasing effects in dark image areas. Aliasing, in this context, refers to contour bands that appear due to gamma correction applied in these low-intensity areas. If only 8 bits per channel are used, there may not be sufficient gradation in dark areas, leading to noticeable bands instead of smooth transitions. Using 12 bits per channel increases the number of possible intensity levels, reducing the chance of these artifacts and ensuring a smoother representation of dark images.",
+  "sourceContent": "",
+  "userAnswer": null,
+  "mark": null
+}

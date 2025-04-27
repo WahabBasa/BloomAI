@@ -1,0 +1,8 @@
+{
+  "questionId": "5d454bae-2429-45bd-84c4-7c1118d9b5f4",
+  "question": "Describe the process of gamma correction between the frame buffer and the display in the context of RGB images.",
+  "explanation": "The process of gamma correction between the frame buffer and the display in the context of RGB images involves adjusting the brightness of pixel values stored in the frame buffer before they are displayed. Typically, the frame buffer stores integers proportional to light intensity. To prevent visible contouring (banding) artifacts, gamma correction is applied, which is a non-linear transformation that adjusts lighter and darker areas differently. If gamma correction is done with floating-point numbers before converting to integers for storage in the frame buffer, it allows accurate representation of colors even with only 8 bits per channel, hence avoiding artifacts that can arise from poor quantization.",
+  "sourceContent": "",
+  "userAnswer": null,
+  "mark": null
+}

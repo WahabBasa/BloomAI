@@ -1,0 +1,8 @@
+{
+  "questionId": "24decd66-40e2-4627-89b6-0980bdc98733",
+  "question": "What are the main color models discussed in Chapter 4 of the Fundamentals of Multimedia?",
+  "explanation": "The main color models discussed in Chapter 4 of the Fundamentals of Multimedia are the RGB color model and the CMY color model. The RGB model, which stands for Red, Green, and Blue, is primarily used for displays and additive color mixing, whereas the CMY model, which consists of Cyan, Magenta, and Yellow, is employed for subtractive color processes, such as printing on paper. In the context of additive color, colors are created by combining light of these three primary colors, while with subtractive color, pigments absorb specific wavelengths of light and reflect others, resulting in the perceived color.",
+  "sourceContent": "",
+  "userAnswer": null,
+  "mark": null
+}

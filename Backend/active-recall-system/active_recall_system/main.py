@@ -184,4 +184,4 @@ try:
     console.print("Your answers and scores have been saved.")
     
 except Exception as e:
-    console.print(f"[bold red]Error:[/bold red] {str(e)}")
+    console.print(f"[bold red]Error:[/bold red] {str(e)}") 

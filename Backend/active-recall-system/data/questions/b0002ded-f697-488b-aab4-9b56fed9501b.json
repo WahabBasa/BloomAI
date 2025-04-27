@@ -1,0 +1,8 @@
+{
+  "questionId": "b0002ded-f697-488b-aab4-9b56fed9501b",
+  "question": "What is a colorimeter and how is it used in matching colors?",
+  "explanation": "A colorimeter is a device used to measure and match colors. During an experiment, a colorimeter allows an individual to adjust the brightness of three primary color lights (red, green, and blue) until the resulting color matches the desired shade. This process involves the use of color matching functions that help determine how to replicate specific colors based on the human eye's sensitivity to different wavelengths of light.",
+  "sourceContent": "",
+  "userAnswer": "it's used to guage how a human would view colours",
+  "mark": 50
+}
