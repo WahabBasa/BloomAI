@@ -45,19 +45,27 @@
     >
       {{ isUploading ? 'Uploading...' : 'Upload File' }}
     </button>
+
+    <div v-if="errorMessage" class="error-message">
+      {{ errorMessage }}
+    </div>
   </div>
 </template>
 
 <script>
 import { ref } from 'vue'
+import { useRouter } from 'vue-router'
+import apiService from '../apiService'
 
 export default {
   name: 'UploadForm',
   setup() {
+    const router = useRouter()
     const fileInput = ref(null)
     const selectedFile = ref(null)
     const isDragging = ref(false)
     const isUploading = ref(false)
+    const errorMessage = ref('')
     
     const triggerFileInput = () => {
       fileInput.value.click()
@@ -67,12 +75,14 @@ export default {
       const file = event.target.files[0]
       if (file) {
         selectedFile.value = file
+        errorMessage.value = ''
       }
     }
     
     const removeFile = () => {
       selectedFile.value = null
       fileInput.value.value = ''
+      errorMessage.value = ''
     }
     
     const dragover = (event) => {
@@ -87,6 +97,7 @@ export default {
       isDragging.value = false
       if (event.dataTransfer.files.length) {
         selectedFile.value = event.dataTransfer.files[0]
+        errorMessage.value = ''
       }
     }
     
@@ -96,17 +107,27 @@ export default {
       else return (bytes / 1048576).toFixed(1) + ' MB'
     }
     
-    const uploadFile = () => {
+    const uploadFile = async () => {
       if (!selectedFile.value) return
       
       isUploading.value = true
+      errorMessage.value = ''
       
-      // Simulate file upload with timeout
-      setTimeout(() => {
+      try {
+        // Use the API service to upload the document
+        const response = await apiService.uploadDocument(selectedFile.value)
+        
+        // If successful, navigate to the test page
+        if (response && response.document_id) {
+          router.push('/test')
+        } else {
+          errorMessage.value = 'Upload successful but received an unexpected response'
+        }
+      } catch (error) {
+        errorMessage.value = error.message || 'Failed to upload document'
+      } finally {
         isUploading.value = false
-        removeFile()
-        alert('File uploaded successfully! (This is a dummy implementation)')
-      }, 1500)
+      }
     }
     
     return {
@@ -114,6 +135,7 @@ export default {
       selectedFile,
       isDragging,
       isUploading,
+      errorMessage,
       triggerFileInput,
       onFileSelected,
       removeFile,
@@ -231,5 +253,14 @@ export default {
 .upload-button:disabled {
   background-color: #cccccc;
   cursor: not-allowed;
+}
+
+.error-message {
+  margin-top: 15px;
+  padding: 10px;
+  background-color: #ffebee;
+  color: #c62828;
+  border-radius: 4px;
+  border-left: 4px solid #c62828;
 }
 </style>

@@ -1,13 +1,15 @@
 import { defineStore } from 'pinia'
-import { dummyQuestions } from '../data/dummyQuestions'
+import apiService from '../apiService'
 
 export const useTestStore = defineStore('test', {
   state: () => ({
+    documentId: null,
     questions: [],
     currentQuestionIndex: 0,
     userAnswers: {},
     isTestCompleted: false,
     isLoading: false,
+    error: null
   }),
   
   getters: {
@@ -32,12 +34,12 @@ export const useTestStore = defineStore('test', {
       
       state.questions.forEach((question) => {
         results.push({
-          id: question.id,
-          question: question.question,
-          userAnswer: state.userAnswers[question.id] || '',
-          correctAnswer: question.correctAnswer,
-          explanation: question.explanation,
-          isCorrect: state.userAnswers[question.id] === question.correctAnswer
+          id: question.question_id,
+          question: question.question_text,
+          userAnswer: state.userAnswers[question.question_id] || '',
+          correctAnswer: question.answer_explanation, // This may need adjustment based on your API response
+          explanation: question.answer_explanation,
+          isCorrect: question.has_been_answered && question.last_mark > 0 // Adjust based on your grading system
         })
       })
       
@@ -46,13 +48,36 @@ export const useTestStore = defineStore('test', {
   },
   
   actions: {
-    loadQuestions() {
+    async loadQuestions(documentId) {
       this.isLoading = true
-      // Simulate API call with timeout
-      setTimeout(() => {
-        this.questions = dummyQuestions
+      this.error = null
+      
+      try {
+        // Store the document ID
+        this.documentId = documentId
+        
+        // Fetch questions from API
+        const response = await apiService.getQuestions(documentId)
+        
+        if (response && response.questions) {
+          this.questions = response.questions.map(q => ({
+            ...q,
+            // Ensure the question has the properties your UI expects
+            question_id: q.question_id,
+            question_text: q.question_text,
+            has_been_answered: q.has_been_answered || false,
+            last_mark: q.last_mark || null
+          }))
+        } else {
+          throw new Error('Invalid response format from API')
+        }
+      } catch (error) {
+        this.error = error.message || 'Failed to load questions'
+        console.error('Error loading questions:', error)
+        this.questions = []
+      } finally {
         this.isLoading = false
-      }, 500)
+      }
     },
     
     nextQuestion() {
@@ -67,18 +92,68 @@ export const useTestStore = defineStore('test', {
       }
     },
     
-    submitAnswer(questionId, answer) {
+  // Update the submitAnswer method in testStore.js
+  async submitAnswer(questionId, answer) {
+    try {
+      // First update the local state
       this.userAnswers[questionId] = answer
-    },
+      
+      // Then submit to the API
+      const response = await apiService.submitAnswer(questionId, answer)
+      
+      // Update the question with the grading information from the response
+      if (response && response.mark !== undefined) {
+        const questionIndex = this.questions.findIndex(q => q.question_id === questionId)
+        if (questionIndex !== -1) {
+          this.questions[questionIndex].has_been_answered = true
+          this.questions[questionIndex].last_mark = response.mark
+        }
+      }
+    } catch (error) {
+      console.error('Error submitting answer:', error)
+      // You might want to handle this error in the UI
+    }
+  },
+
+
+    // Add this method to testStore.js actions
+  async refreshQuestionGrades() {
+    if (!this.documentId) return
     
-    completeTest() {
-      this.isTestCompleted = true
-    },
+    try {
+      // Fetch the latest question data with grading information
+      const response = await apiService.getQuestions(this.documentId)
+      
+      if (response && response.questions) {
+        // Update existing questions with the latest grading information
+        response.questions.forEach(updatedQ => {
+          const questionIndex = this.questions.findIndex(q => q.question_id === updatedQ.question_id)
+          if (questionIndex !== -1) {
+            this.questions[questionIndex].has_been_answered = updatedQ.has_been_answered || false
+            this.questions[questionIndex].last_mark = updatedQ.last_mark || null
+          }
+        })
+      }
+    } catch (error) {
+      console.error('Error refreshing question grades:', error)
+    }
+  },
+
+  // Update the completeTest method to refresh grades before completing
+  async completeTest() {
+    await this.refreshQuestionGrades()
+    this.isTestCompleted = true
+  },  
+    
+
     
     resetTest() {
+      this.documentId = null
       this.currentQuestionIndex = 0
       this.userAnswers = {}
       this.isTestCompleted = false
+      this.questions = []
+      this.error = null
     }
   }
 })
