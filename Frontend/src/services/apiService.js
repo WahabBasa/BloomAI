@@ -1,5 +1,5 @@
 // Base API URL - updated for local development
-const API_BASE_URL = 'http://localhost:8000/api';
+const API_BASE_URL = 'https://bloomai-hackathon-prd-wa-uaen-01-eaezdxhbegfvhgd7.uaenorth-01.azurewebsites.net/api';
 
 /**
  * API Service for interacting with the Django backend
