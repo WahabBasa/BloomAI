@@ -24,13 +24,12 @@ def upload_document(request):
             if not uploaded_file.name.endswith('.pdf'):
                 return JsonResponse({'error': 'Only PDF files are supported'}, status=400)
             
-            # For local development, save to uploads directory
-            # Make sure the directory exists
+            # Create upload directory if it doesn't exist, using BASE_DIR from settings
             upload_dir = os.path.join(settings.BASE_DIR, 'uploads')
             if not os.path.exists(upload_dir):
                 os.makedirs(upload_dir)
             
-            # Create a path to save the file
+            # Store file paths relative to BASE_DIR for Azure compatibility
             file_path = os.path.join('uploads', uploaded_file.name)
             full_path = os.path.join(settings.BASE_DIR, file_path)
             

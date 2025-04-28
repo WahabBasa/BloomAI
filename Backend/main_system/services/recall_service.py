@@ -57,9 +57,8 @@ def process_pdf(document_id):
         # Get the document from the database
         document = Document.objects.get(pk=document_id)
         
-        # For local development, the file path is relative to MEDIA_ROOT
-        # Assuming uploads/ directory in the project root
-        file_path = os.path.join('uploads', os.path.basename(document.file_path))
+        # Use settings.BASE_DIR to get the absolute path that works in both local and Azure environments
+        file_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), document.file_path)
         
         # Check if file exists
         if not os.path.exists(file_path):
