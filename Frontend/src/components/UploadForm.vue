@@ -55,8 +55,7 @@
 <script>
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
-import apiService from '../apiService'
-
+import apiService from '../services/apiService'
 export default {
   name: 'UploadForm',
   setup() {

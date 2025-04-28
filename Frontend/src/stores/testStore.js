@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import apiService from '../apiService'
+import apiService from '../services/apiService'
 
 export const useTestStore = defineStore('test', {
   state: () => ({
