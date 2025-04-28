@@ -8,7 +8,7 @@ class Document(models.Model):
     file_path = models.CharField(max_length=255)
     content = models.TextField()
     page_count = models.IntegerField(default=0)
-    author = models.CharField(max_length=255, blank=True, null=True)
+    author = models.CharField(max_length=255, blank=True, null=True) 
     created_date = models.DateTimeField(blank=True, null=True)
     uploaded_at = models.DateTimeField(auto_now_add=True)
 
