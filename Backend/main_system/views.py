@@ -5,14 +5,11 @@ from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.shortcuts import get_object_or_404
 from django.conf import settings
-from django.core.files.storage import FileSystemStorage
 
 from .models import Document, Question, UserAnswer
 from .services.recall_service import process_pdf, grade_answer
 
 # Document Management Endpoints
-# For the upload_document function in views.py, replace the local storage code with:
-
 @csrf_exempt
 def upload_document(request):
     """API endpoint for uploading PDF documents"""
@@ -27,15 +24,24 @@ def upload_document(request):
             if not uploaded_file.name.endswith('.pdf'):
                 return JsonResponse({'error': 'Only PDF files are supported'}, status=400)
             
-            # Using Django's default file storage which is configured for Azure
-            from django.core.files.storage import default_storage
+            # For local development, save to uploads directory
+            # Make sure the directory exists
+            upload_dir = os.path.join(settings.BASE_DIR, 'uploads')
+            if not os.path.exists(upload_dir):
+                os.makedirs(upload_dir)
             
-            # Save the file
-            file_path = default_storage.save(uploaded_file.name, uploaded_file)
+            # Create a path to save the file
+            file_path = os.path.join('uploads', uploaded_file.name)
+            full_path = os.path.join(settings.BASE_DIR, file_path)
+            
+            # Save the file to disk
+            with open(full_path, 'wb+') as destination:
+                for chunk in uploaded_file.chunks():
+                    destination.write(chunk)
             
             # Create document record in the database
             document = Document.objects.create(
-                file_path=file_path,  # This will now be the path in Azure Storage
+                file_path=file_path,
                 title=os.path.splitext(uploaded_file.name)[0],
                 content=""  # Content will be extracted by process_pdf
             )
@@ -52,6 +58,7 @@ def upload_document(request):
         except Exception as e:
             return JsonResponse({'error': str(e)}, status=500)
 
+# The rest of the file remains unchanged
 def get_documents(request):
     """API endpoint for retrieving all documents"""
     if request.method == 'GET':

@@ -104,7 +104,8 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # CORS settings for production
-CORS_ALLOW_ALL_ORIGINS = False
+# CORS settings for local development
+CORS_ALLOW_ALL_ORIGINS = True  # Only for development! Change back to False for production
 CORS_ALLOW_CREDENTIALS = True
 
 # For production, specify the allowed origins

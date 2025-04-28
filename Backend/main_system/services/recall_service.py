@@ -43,8 +43,6 @@ from main_system.models import Document, Question, UserAnswer
 # Initialize the PDFExtractorTool
 pdf_tool = PDFExtractorTool(config=PDFExtractorToolConfig())
 
-# In recall_service.py, modify the process_pdf function to handle Azure storage paths
-
 def process_pdf(document_id):
     """
     Process a PDF document to extract content and generate questions
@@ -59,24 +57,17 @@ def process_pdf(document_id):
         # Get the document from the database
         document = Document.objects.get(pk=document_id)
         
-        # Get the file from Azure Storage
-        from django.core.files.storage import default_storage
-        import tempfile
+        # For local development, the file path is relative to MEDIA_ROOT
+        # Assuming uploads/ directory in the project root
+        file_path = os.path.join('uploads', os.path.basename(document.file_path))
         
-        # Create a temporary file
-        with tempfile.NamedTemporaryFile(delete=False) as temp_file:
-            # Download the file from Azure storage to the temp file
-            with default_storage.open(document.file_path, 'rb') as azure_file:
-                temp_file.write(azure_file.read())
-            
-            temp_file_path = temp_file.name
+        # Check if file exists
+        if not os.path.exists(file_path):
+            raise FileNotFoundError(f"PDF file not found at {file_path}")
         
-        # Extract content from the PDF using the local temp file
-        pdf_input = PDFExtractorToolInputSchema(file_path=temp_file_path)
+        # Extract content from the PDF
+        pdf_input = PDFExtractorToolInputSchema(file_path=file_path)
         pdf_output = pdf_tool.run(pdf_input)
-        
-        # Clean up the temp file
-        os.unlink(temp_file_path)
         
         # Update document with extracted content
         document.content = pdf_output.content
@@ -88,8 +79,6 @@ def process_pdf(document_id):
         if pdf_output.metadata.created_date:
             document.created_date = pdf_output.metadata.created_date
         document.save()
-        
-        # Continue with the existing code...
         
         # Update pdf_content_provider with the extracted PDF data
         pdf_content_provider.content = pdf_output.content
