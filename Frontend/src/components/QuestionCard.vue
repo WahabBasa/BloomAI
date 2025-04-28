@@ -23,6 +23,7 @@
 </template>
 
 <script>
+
 import { ref, watch } from 'vue'
 
 export default {
@@ -36,20 +37,28 @@ export default {
   emits: ['answer-submitted'],
   setup(props, { emit }) {
     const answer = ref('')
+    let saveTimeout = null
     
     // Reset when question changes
-    watch(() => props.question.id, () => {
+    watch(() => props.question.question_id, () => {
       answer.value = ''
     })
     
-    const submitAnswer = () => {
-      if (!answer.value.trim()) return
-      emit('answer-submitted', answer.value)
-    }
+    // Auto-save answer after user stops typing
+    watch(() => answer.value, (newAnswer) => {
+      // Clear any pending timeout
+      if (saveTimeout) clearTimeout(saveTimeout)
+      
+      // Set new timeout to save after typing stops
+      if (newAnswer.trim()) {
+        saveTimeout = setTimeout(() => {
+          emit('answer-submitted', newAnswer)
+        }, 1000) // Wait 1 second after typing stops
+      }
+    })
     
     return {
-      answer,
-      submitAnswer
+      answer
     }
   }
 }
