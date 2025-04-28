@@ -40,9 +40,17 @@ export default {
     const testStore = useTestStore()
     
     const startPractice = () => {
-      testStore.loadQuestions()
-      testStore.resetTest()
-      router.push('/test')
+      // Get the document ID from localStorage if available
+      const documentId = localStorage.getItem('currentDocumentId');
+      
+      if (documentId) {
+        // Load questions for the selected document
+        testStore.loadQuestions(documentId);
+        router.push('/test');
+      } else {
+        // If no document is selected, show an alert or handle appropriately
+        alert('Please upload or select a document first');
+      }
     }
     
     return {
