@@ -64,17 +64,10 @@ TEMPLATES = [
 WSGI_APPLICATION = 'recall_system.wsgi.application'
 
 # Database
-# Updated for Azure PostgreSQL
-# Get connection info from environment variables for security
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.environ.get('AZURE_POSTGRESQL_NAME', 'recall_system_db'),
-        'USER': os.environ.get('AZURE_POSTGRESQL_USER', 'postgres'),
-        'PASSWORD': os.environ.get('AZURE_POSTGRESQL_PASSWORD', 'your_password'),
-        'HOST': os.environ.get('AZURE_POSTGRESQL_HOST', 'localhost'),
-        'PORT': os.environ.get('AZURE_POSTGRESQL_PORT', '5432'),
-        'OPTIONS': {'sslmode': 'require'},
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
     }
 }
 
