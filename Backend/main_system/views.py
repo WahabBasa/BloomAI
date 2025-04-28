@@ -11,6 +11,8 @@ from .models import Document, Question, UserAnswer
 from .services.recall_service import process_pdf, grade_answer
 
 # Document Management Endpoints
+# For the upload_document function in views.py, replace the local storage code with:
+
 @csrf_exempt
 def upload_document(request):
     """API endpoint for uploading PDF documents"""
@@ -25,24 +27,20 @@ def upload_document(request):
             if not uploaded_file.name.endswith('.pdf'):
                 return JsonResponse({'error': 'Only PDF files are supported'}, status=400)
             
-            # Create storage directory if it doesn't exist
-            upload_dir = os.path.join(settings.BASE_DIR, 'uploads')
-            os.makedirs(upload_dir, exist_ok=True)
+            # Using Django's default file storage which is configured for Azure
+            from django.core.files.storage import default_storage
             
             # Save the file
-            fs = FileSystemStorage(location=upload_dir)
-            filename = fs.save(uploaded_file.name, uploaded_file)
-            file_path = os.path.join(upload_dir, filename)
+            file_path = default_storage.save(uploaded_file.name, uploaded_file)
             
             # Create document record in the database
             document = Document.objects.create(
-                file_path=file_path,
-                title=os.path.splitext(uploaded_file.name)[0],  # Use filename as initial title
+                file_path=file_path,  # This will now be the path in Azure Storage
+                title=os.path.splitext(uploaded_file.name)[0],
                 content=""  # Content will be extracted by process_pdf
             )
             
-            # Process the PDF in background or immediately based on size
-            # For simplicity, we're processing it immediately here
+            # Process the PDF
             questions = process_pdf(document.document_id)
             
             return JsonResponse({
@@ -53,8 +51,6 @@ def upload_document(request):
             
         except Exception as e:
             return JsonResponse({'error': str(e)}, status=500)
-    
-    return JsonResponse({'error': 'Method not allowed'}, status=405)
 
 def get_documents(request):
     """API endpoint for retrieving all documents"""
