@@ -105,12 +105,11 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # CORS settings for production
 # CORS settings for local development
-CORS_ALLOW_ALL_ORIGINS = True  # Only for development! Change back to False for production
+CORS_ALLOW_ALL_ORIGINS = False  # Only for development! Change back to False for production
 CORS_ALLOW_CREDENTIALS = True
 
 # For production, specify the allowed origins
 CORS_ALLOWED_ORIGINS = [
-    "https://your-static-webapp-url.azurestaticapps.net",  # Replace with your Static Web App URL
+    "https://zealous-water-00b4c1200.6.azurestaticapps.net"
 ]
-
 # Azure Storage for file uploads
