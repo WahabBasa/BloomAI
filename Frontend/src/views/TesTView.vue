@@ -70,7 +70,7 @@ export default {
         
     const submitAnswer = (answer) => {
       if (testStore.currentQuestion) {
-        testStore.submitAnswer(testStore.currentQuestion.id, answer)
+        testStore.submitAnswer(testStore.currentQuestion.question_id, answer)
       }
     }
     
