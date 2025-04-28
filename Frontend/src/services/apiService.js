@@ -1,5 +1,5 @@
-// Base API URL - update this to match your Django server
-const API_BASE_URL = '/api';
+// Base API URL - updated for Azure App Service
+const API_BASE_URL = 'https://bloomai-hackathon-prd-wa-uaen-01-eaexdxhbegfvhgd7.uaenorth-01.azurewebsites.net/api';
 
 /**
  * API Service for interacting with the Django backend
