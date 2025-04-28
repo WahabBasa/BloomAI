@@ -133,6 +133,7 @@ def get_questions(request, document_id):
                 questions_data.append({
                     'question_id': str(question.question_id),
                     'question_text': question.question_text,
+                    'answer_explanation': question.answer_explanation,  # Added this line to include explanation
                     'has_been_answered': latest_answer is not None,
                     'last_mark': latest_answer.mark if latest_answer else None
                 })
