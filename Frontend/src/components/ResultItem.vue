@@ -2,16 +2,9 @@
   <div class="result-item" :class="{ correct: result.isCorrect }">
     <h3 class="question">{{ result.question }}</h3>
     
-    <div class="answers">
-      <div class="user-answer">
-        <h4>Your Answer:</h4>
-        <p>{{ result.userAnswer || 'No answer provided' }}</p>
-      </div>
-      
-      <div class="correct-answer">
-        <h4>Correct Answer:</h4>
-        <p>{{ result.correctAnswer }}</p>
-      </div>
+    <div class="user-answer">
+      <h4>Your Answer:</h4>
+      <p>{{ result.userAnswer || 'No answer provided' }}</p>
     </div>
     
     <div class="explanation">
@@ -51,31 +44,29 @@ export default {
   margin-bottom: 15px;
 }
 
-.answers {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 20px;
+.user-answer, .explanation {
   margin-bottom: 15px;
 }
 
-.user-answer, .correct-answer, .explanation {
-  margin-bottom: 10px;
-}
-
-.user-answer h4, .correct-answer h4, .explanation h4 {
+.user-answer h4, .explanation h4 {
   font-size: 0.9rem;
   color: #666;
   margin-bottom: 5px;
 }
 
-.correct-answer p {
-  color: #4CAF50;
-  font-weight: bold;
+.explanation {
+  background-color: #f9f9f9;
+  padding: 10px;
+  border-radius: 4px;
+}
+
+.explanation p {
+  line-height: 1.5;
 }
 
 @media (max-width: 600px) {
-  .answers {
-    grid-template-columns: 1fr;
+  .user-answer, .explanation {
+    padding: 5px;
   }
 }
 </style>

@@ -37,9 +37,9 @@ export const useTestStore = defineStore('test', {
           id: question.question_id,
           question: question.question_text,
           userAnswer: state.userAnswers[question.question_id] || '',
-          correctAnswer: question.answer_explanation, // This may need adjustment based on your API response
+          correctAnswer: question.answer_explanation,
           explanation: question.answer_explanation,
-          isCorrect: question.has_been_answered && question.last_mark > 0 // Adjust based on your grading system
+          isCorrect: question.has_been_answered && question.last_mark > 0
         })
       })
       
