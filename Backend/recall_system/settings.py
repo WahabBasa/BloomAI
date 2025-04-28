@@ -15,7 +15,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'django-insecure-#v2yy06k&xanem6y88cltxmzoj4^(o%v1mbwlv-jqb8(rye1nu')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 # Update to include your Azure domain
 if DEBUG:
