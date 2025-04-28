@@ -77,11 +77,14 @@ WSGI_APPLICATION = 'recall_system.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'recall_system_db',  # Your database name
+        'USER': 'postgres',          # Your PostgreSQL username
+        'PASSWORD': 'your_password', # Your PostgreSQL password
+        'HOST': 'localhost',         # Set to your PostgreSQL host
+        'PORT': '5432',              # Default PostgreSQL port
     }
 }
-
 
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
