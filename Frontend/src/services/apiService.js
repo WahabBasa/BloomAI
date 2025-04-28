@@ -1,5 +1,5 @@
 // Base API URL - update this to match your Django server
-const API_BASE_URL = 'http://localhost:8000/api';
+const API_BASE_URL = '/api';
 
 /**
  * API Service for interacting with the Django backend

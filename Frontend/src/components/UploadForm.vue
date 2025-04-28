@@ -119,6 +119,8 @@ export default {
         
         // If successful, navigate to the test page
         if (response && response.document_id) {
+          // Store the document ID in localStorage
+          localStorage.setItem('currentDocumentId', response.document_id)
           router.push('/test')
         } else {
           errorMessage.value = 'Upload successful but received an unexpected response'

@@ -58,9 +58,16 @@ export default {
     
     // Load questions if not already loaded
     if (testStore.questions.length === 0) {
-      testStore.loadQuestions()
+      // Get the document ID from the route or localStorage
+      const documentId = localStorage.getItem('currentDocumentId')
+      if (documentId) {
+        testStore.loadQuestions(documentId)
+      } else {
+        // If no document ID is found, redirect to upload page
+        router.push('/')
+      }
     }
-    
+        
     const submitAnswer = (answer) => {
       if (testStore.currentQuestion) {
         testStore.submitAnswer(testStore.currentQuestion.id, answer)
