@@ -1,6 +1,6 @@
 <template>
   <div class="question-card">
-    <h2 class="question-text">{{ question.question }}</h2>
+    <h2 class="question-text">{{ question.question_text }}</h2>
     
     <div class="answer-section">
       <label for="answer-input">Your Answer:</label>
