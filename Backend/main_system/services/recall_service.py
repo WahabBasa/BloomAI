@@ -8,11 +8,6 @@ import uuid
 # Load environment variables
 load_dotenv()
 
-# Check if the API key is loaded
-api_key = os.getenv("OPENAI_API_KEY")
-if not api_key:
-    raise ValueError("OPENAI_API_KEY not found in environment variables!")
-
 from main_system.tools.content_extractor import (
     PDFExtractorTool,
     PDFExtractorToolConfig,
@@ -53,6 +48,8 @@ def process_pdf(document_id):
     Returns:
         A list of question objects
     """
+    require_api_key()
+
     try:
         # Get the document from the database
         document = Document.objects.get(pk=document_id)
@@ -135,6 +132,8 @@ def grade_answer(answer_id):
     Returns:
         The updated UserAnswer object with a grade
     """
+    require_api_key()
+
     try:
         # Get the answer from the database
         user_answer = UserAnswer.objects.get(pk=answer_id)
