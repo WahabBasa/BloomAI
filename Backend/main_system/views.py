@@ -173,7 +173,8 @@ def get_questions(request, document_id):
                     'question_text': question.question_text,
                     'answer_explanation': question.answer_explanation,
                     'has_been_answered': latest_answer is not None,
-                    'last_mark': latest_answer.mark if latest_answer else None
+                    'last_mark': latest_answer.mark if latest_answer else None,
+                    'last_feedback': latest_answer.feedback if latest_answer else None
                 })
 
             return JsonResponse({'questions': questions_data})
@@ -209,6 +210,7 @@ def get_question(request, question_id):
                     'answer_id': str(answer.answer_id),
                     'user_answer': answer.user_answer,
                     'mark': answer.mark,
+                    'feedback': answer.feedback,
                     'submitted_at': answer.submitted_at.isoformat()
                 })
 
@@ -267,6 +269,7 @@ def submit_answer(request, question_id):
             return JsonResponse({
                 'answer_id': str(graded_answer.answer_id),
                 'mark': graded_answer.mark,
+                'feedback': graded_answer.feedback,
                 'question_id': str(question.question_id)
             })
 
@@ -299,6 +302,7 @@ def get_answer(request, answer_id):
                 'question_text': question.question_text,
                 'user_answer': answer.user_answer,
                 'mark': answer.mark,
+                'feedback': answer.feedback,
                 'submitted_at': answer.submitted_at.isoformat(),
                 'answer_explanation': question.answer_explanation
             })

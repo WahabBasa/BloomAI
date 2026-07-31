@@ -7,6 +7,11 @@
       <p>{{ result.userAnswer || 'No answer provided' }}</p>
     </div>
     
+    <div v-if="result.feedback" class="feedback">
+      <h4>Feedback:</h4>
+      <p>{{ result.feedback }}</p>
+    </div>
+
     <div class="explanation">
       <h4>Explanation:</h4>
       <p>{{ result.explanation }}</p>
@@ -44,28 +49,32 @@ export default {
   margin-bottom: 15px;
 }
 
-.user-answer, .explanation {
+.user-answer, .feedback, .explanation {
   margin-bottom: 15px;
 }
 
-.user-answer h4, .explanation h4 {
+.user-answer h4, .feedback h4, .explanation h4 {
   font-size: 0.9rem;
   color: #666;
   margin-bottom: 5px;
 }
 
-.explanation {
+.feedback, .explanation {
   background-color: #f9f9f9;
   padding: 10px;
   border-radius: 4px;
 }
 
-.explanation p {
+.feedback {
+  background-color: #eef4fb;
+}
+
+.feedback p, .explanation p {
   line-height: 1.5;
 }
 
 @media (max-width: 600px) {
-  .user-answer, .explanation {
+  .user-answer, .feedback, .explanation {
     padding: 5px;
   }
 }

@@ -1,10 +1,8 @@
-import os
 from typing import List, Optional
 from pydantic import Field
 from datetime import datetime
 
 import PyPDF2
-from io import BytesIO
 
 from atomic_agents.agents.base_agent import BaseIOSchema
 from atomic_agents.lib.base.base_tool import BaseTool, BaseToolConfig
@@ -50,10 +48,6 @@ class PDFExtractorToolOutputSchema(BaseIOSchema):
 #################
 class PDFExtractorToolConfig(BaseToolConfig):
     """Configuration for the PDFExtractorTool."""
-    extract_images: bool = Field(
-        default=False, 
-        description="Whether to attempt to extract and process images (not fully implemented)."
-    )
 
 
 #####################
@@ -71,15 +65,17 @@ class PDFExtractorTool(BaseTool):
     input_schema = PDFExtractorToolInputSchema
     output_schema = PDFExtractorToolOutputSchema
 
-    def __init__(self, config: PDFExtractorToolConfig = PDFExtractorToolConfig()):
+    def __init__(self, config: Optional[PDFExtractorToolConfig] = None):
         """
         Initializes the PDFExtractorTool.
 
         Args:
-            config (PDFExtractorToolConfig): Configuration for the tool.
+            config (Optional[PDFExtractorToolConfig]): Configuration for the tool.
+                Defaults to a fresh `PDFExtractorToolConfig()`. It is built here
+                rather than in the signature so the default is not one shared,
+                mutable instance for the lifetime of the process.
         """
-        super().__init__(config)
-        self.extract_images = config.extract_images
+        super().__init__(config or PDFExtractorToolConfig())
 
     def run(self, params: PDFExtractorToolInputSchema) -> PDFExtractorToolOutputSchema:
         """
@@ -92,7 +88,9 @@ class PDFExtractorTool(BaseTool):
             PDFExtractorToolOutputSchema: The output of the tool with extracted content.
 
         Raises:
-            Exception: If reading the PDF file fails.
+            FileNotFoundError: If the file does not exist.
+            ValueError: If `pages` names no page that exists in the document.
+            RuntimeError: If the file exists but cannot be parsed as a PDF.
         """
         try:
             with open(params.file_path, 'rb') as file:
@@ -126,10 +124,13 @@ class PDFExtractorTool(BaseTool):
                     metadata=metadata
                 )
                 
-        except FileNotFoundError:
-            raise Exception(f"PDF file not found: {params.file_path}")
-        except Exception as e:
-            raise Exception(f"Failed to extract content from PDF: {str(e)}")
+        except (FileNotFoundError, ValueError):
+            # A missing file and an out-of-range page selection are both callable
+            # errors, not tool failures. Flattening them into a bare `Exception`
+            # left callers unable to tell them apart from a corrupt PDF.
+            raise
+        except Exception as exc:
+            raise RuntimeError(f"Failed to extract content from PDF: {params.file_path}") from exc
 
     def extract_metadata(self, pdf_reader: PyPDF2.PdfReader) -> PDFMetadata:
         """
@@ -169,32 +170,3 @@ class PDFExtractorTool(BaseTool):
             created_date=created_date,
             num_pages=len(pdf_reader.pages)
         )
-
-
-#################
-# EXAMPLE USAGE #
-#################
-if __name__ == "__main__":
-    from rich.console import Console
-
-    rich_console = Console()
-    pdf_tool = PDFExtractorTool()
-
-    # Example: Extract all pages
-    input_all_pages = PDFExtractorToolInputSchema(file_path="path/to/document.pdf")
-    
-    # Example: Extract specific pages
-    input_specific_pages = PDFExtractorToolInputSchema(
-        file_path="path/to/document.pdf",
-        pages=[1, 3, 5]  # Extract pages 1, 3, and 5
-    )
-    
-    # Run the tool
-    try:
-        output = pdf_tool.run(input_all_pages)
-        rich_console.print("Extracted Content:")
-        rich_console.print(output.content[:500] + "..." if len(output.content) > 500 else output.content)
-        rich_console.print(f"Extracted {len(output.pages_extracted)} pages: {output.pages_extracted}")
-        rich_console.print(f"Document has {output.metadata.num_pages} total pages")
-    except Exception as e:
-        rich_console.print(f"Error: {str(e)}", style="bold red")

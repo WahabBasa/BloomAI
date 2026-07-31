@@ -32,6 +32,7 @@ class UserAnswer(models.Model):
     question = models.ForeignKey(Question, on_delete=models.CASCADE, related_name='user_answers')
     user_answer = models.TextField()
     mark = models.IntegerField(null=True, blank=True)  # 0, 50, or 100
+    feedback = models.TextField(null=True, blank=True)  # grader's explanation of the mark
     submitted_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):

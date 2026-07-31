@@ -39,6 +39,7 @@ export const useTestStore = defineStore('test', {
           userAnswer: state.userAnswers[question.question_id] || '',
           correctAnswer: question.answer_explanation,
           explanation: question.answer_explanation,
+          feedback: question.last_feedback || '',
           isCorrect: question.has_been_answered && question.last_mark > 0
         })
       })
@@ -66,7 +67,8 @@ export const useTestStore = defineStore('test', {
             question_id: q.question_id,
             question_text: q.question_text,
             has_been_answered: q.has_been_answered || false,
-            last_mark: q.last_mark || null
+            last_mark: q.last_mark || null,
+            last_feedback: q.last_feedback || null
           }))
         } else {
           throw new Error('Invalid response format from API')
@@ -107,6 +109,7 @@ export const useTestStore = defineStore('test', {
         if (questionIndex !== -1) {
           this.questions[questionIndex].has_been_answered = true
           this.questions[questionIndex].last_mark = response.mark
+          this.questions[questionIndex].last_feedback = response.feedback ?? null
         }
       }
     } catch (error) {
@@ -131,6 +134,7 @@ export const useTestStore = defineStore('test', {
           if (questionIndex !== -1) {
             this.questions[questionIndex].has_been_answered = updatedQ.has_been_answered || false
             this.questions[questionIndex].last_mark = updatedQ.last_mark || null
+            this.questions[questionIndex].last_feedback = updatedQ.last_feedback || null
           }
         })
       }
