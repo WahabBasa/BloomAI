@@ -11,12 +11,12 @@
         placeholder="Type your answer here..."
       ></textarea>
       
-      <button 
-        class="submit-button" 
+      <button
+        class="submit-button"
         @click="submitAnswer"
         :disabled="!answer.trim()"
       >
-        Save Answer
+        Submit Answer
       </button>
     </div>
   </div>
@@ -37,28 +37,25 @@ export default {
   emits: ['answer-submitted'],
   setup(props, { emit }) {
     const answer = ref('')
-    let saveTimeout = null
-    
+
     // Reset when question changes
     watch(() => props.question.question_id, () => {
       answer.value = ''
     })
-    
-    // Auto-save answer after user stops typing
-    watch(() => answer.value, (newAnswer) => {
-      // Clear any pending timeout
-      if (saveTimeout) clearTimeout(saveTimeout)
-      
-      // Set new timeout to save after typing stops
-      if (newAnswer.trim()) {
-        saveTimeout = setTimeout(() => {
-          emit('answer-submitted', newAnswer)
-        }, 1000) // Wait 1 second after typing stops
-      }
-    })
-    
+
+    // Submitting is explicit. There used to be a watcher that emitted
+    // 'answer-submitted' one second after every typing pause, so a single
+    // answer was sent to the backend -- and graded by the LLM -- once per
+    // pause while the user was still writing it.
+    const submitAnswer = () => {
+      const trimmed = answer.value.trim()
+      if (!trimmed) return
+      emit('answer-submitted', trimmed)
+    }
+
     return {
-      answer
+      answer,
+      submitAnswer
     }
   }
 }

@@ -1,7 +1,10 @@
 <template>
-  <div class="result-item" :class="{ correct: result.isCorrect }">
-    <h3 class="question">{{ result.question }}</h3>
-    
+  <div class="result-item" :class="result.status">
+    <div class="result-header">
+      <h3 class="question">{{ result.question }}</h3>
+      <span class="status-badge">{{ statusLabel }}</span>
+    </div>
+
     <div class="user-answer">
       <h4>Your Answer:</h4>
       <p>{{ result.userAnswer || 'No answer provided' }}</p>
@@ -20,12 +23,26 @@
 </template>
 
 <script>
+import { computed } from 'vue'
+
+const STATUS_LABELS = {
+  correct: 'Correct',
+  partial: 'Partially correct',
+  incorrect: 'Incorrect',
+  unanswered: 'Not answered'
+}
+
 export default {
   name: 'ResultItem',
   props: {
     result: {
       type: Object,
       required: true
+    }
+  },
+  setup(props) {
+    return {
+      statusLabel: computed(() => STATUS_LABELS[props.result.status] ?? STATUS_LABELS.unanswered)
     }
   }
 }
@@ -44,9 +61,49 @@ export default {
   border-left-color: #4CAF50;
 }
 
+.result-item.partial {
+  border-left-color: #FFA000;
+}
+
+.result-item.unanswered {
+  border-left-color: #9e9e9e;
+}
+
+.result-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 15px;
+}
+
 .question {
   font-size: 1.1rem;
-  margin-bottom: 15px;
+}
+
+.status-badge {
+  flex-shrink: 0;
+  font-size: 0.8rem;
+  padding: 3px 10px;
+  border-radius: 999px;
+  white-space: nowrap;
+  background-color: #ffebee;
+  color: #c62828;
+}
+
+.result-item.correct .status-badge {
+  background-color: #e8f5e9;
+  color: #2e7d32;
+}
+
+.result-item.partial .status-badge {
+  background-color: #fff8e1;
+  color: #ef6c00;
+}
+
+.result-item.unanswered .status-badge {
+  background-color: #f0f0f0;
+  color: #616161;
 }
 
 .user-answer, .feedback, .explanation {

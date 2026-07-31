@@ -12,8 +12,8 @@
         type="file" 
         ref="fileInput" 
         class="file-input" 
-        @change="onFileSelected" 
-        accept=".pdf,.doc,.docx,.txt"
+        @change="onFileSelected"
+        accept=".pdf,application/pdf"
       >
       <div class="upload-icon">
         <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -23,10 +23,10 @@
         </svg>
       </div>
       <p class="upload-text">
-        <span class="primary-text">Drag and drop files here</span>
-        <span class="secondary-text">or click to select files</span>
+        <span class="primary-text">Drag and drop a file here</span>
+        <span class="secondary-text">or click to select a file</span>
       </p>
-      <p class="file-types">Supported formats: PDF, DOC, DOCX, TXT</p>
+      <p class="file-types">Supported format: PDF</p>
     </div>
     
     <div v-if="selectedFile" class="selected-file">
@@ -70,33 +70,45 @@ export default {
       fileInput.value.click()
     }
     
-    const onFileSelected = (event) => {
-      const file = event.target.files[0]
-      if (file) {
-        selectedFile.value = file
-        errorMessage.value = ''
+    // The backend only accepts PDFs. `accept` on the input is a hint the file
+    // picker may ignore, and drag-and-drop bypasses it entirely, so both entry
+    // points check the extension themselves.
+    const acceptFile = (file) => {
+      if (!file) return
+
+      if (!file.name.toLowerCase().endsWith('.pdf')) {
+        selectedFile.value = null
+        if (fileInput.value) fileInput.value.value = ''
+        errorMessage.value = 'Only PDF files are supported.'
+        return
       }
+
+      selectedFile.value = file
+      errorMessage.value = ''
     }
-    
+
+    const onFileSelected = (event) => {
+      acceptFile(event.target.files[0])
+    }
+
     const removeFile = () => {
       selectedFile.value = null
       fileInput.value.value = ''
       errorMessage.value = ''
     }
     
-    const dragover = (event) => {
+    const dragover = () => {
       isDragging.value = true
     }
-    
-    const dragleave = (event) => {
+
+    const dragleave = () => {
       isDragging.value = false
     }
     
     const drop = (event) => {
       isDragging.value = false
       if (event.dataTransfer.files.length) {
-        selectedFile.value = event.dataTransfer.files[0]
-        errorMessage.value = ''
+        acceptFile(event.dataTransfer.files[0])
       }
     }
     

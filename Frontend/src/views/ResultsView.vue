@@ -14,7 +14,11 @@
           <div class="summary-label">Correct</div>
         </div>
         <div class="summary-item">
-          <div class="summary-value">{{ totalQuestions - correctAnswers }}</div>
+          <div class="summary-value">{{ partialAnswers }}</div>
+          <div class="summary-label">Partially correct</div>
+        </div>
+        <div class="summary-item">
+          <div class="summary-value">{{ incorrectAnswers }}</div>
           <div class="summary-label">Incorrect</div>
         </div>
         <div class="summary-item">
@@ -65,15 +69,24 @@ export default {
       router.push('/test')
     }
     
-    const correctAnswers = computed(() => {
-      return testStore.results.filter(result => result.isCorrect).length
-    })
-    
+    const countByStatus = (...statuses) => computed(
+      () => testStore.results.filter(result => statuses.includes(result.status)).length
+    )
+
+    const correctAnswers = countByStatus('correct')
+    const partialAnswers = countByStatus('partial')
+    const incorrectAnswers = countByStatus('incorrect', 'unanswered')
+
+    // Averaging the marks rather than counting fully-correct answers, so a
+    // half-credit answer contributes half a question's worth of score.
     const scorePercentage = computed(() => {
-      if (testStore.totalQuestions === 0) return 0
-      return Math.round((correctAnswers.value / testStore.totalQuestions) * 100)
+      const results = testStore.results
+      if (results.length === 0) return 0
+
+      const total = results.reduce((sum, result) => sum + (result.mark ?? 0), 0)
+      return Math.round(total / results.length)
     })
-    
+
     const retakeTest = () => {
       testStore.resetTest()
       router.push('/test')
@@ -88,6 +101,8 @@ export default {
       results: computed(() => testStore.results),
       totalQuestions: computed(() => testStore.totalQuestions),
       correctAnswers,
+      partialAnswers,
+      incorrectAnswers,
       scorePercentage,
       retakeTest,
       goToUpload
@@ -132,7 +147,9 @@ h2 {
 
 .results-summary {
   display: flex;
+  flex-wrap: wrap;
   justify-content: space-around;
+  gap: 20px;
   margin: 20px 0;
   padding: 20px;
   background-color: white;
