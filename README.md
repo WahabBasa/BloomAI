@@ -112,6 +112,18 @@ explanations.
 `python manage.py createsuperuser` plus http://localhost:8000/admin/ gives you a
 look at the stored documents, questions and answers.
 
+### Tests
+
+```bash
+cd Backend
+python manage.py test main_system
+```
+
+Every agent factory and the PDF extractor are stubbed, so the suite makes no
+network calls and needs no API key. It covers score conversion (0 / 0.5 / 1 →
+0 / 50 / 100), UUID validation, the upload rules, orphan cleanup when
+generation fails, and that internal error detail stays out of API responses.
+
 ---
 
 ## API
