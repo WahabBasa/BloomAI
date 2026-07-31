@@ -1,13 +1,15 @@
 # Docs for the Azure Web Apps Deploy action: https://github.com/Azure/webapps-deploy
 # More GitHub Actions for Azure: https://github.com/Azure/actions
 # More info on Python, GitHub Actions, and Azure App Service: https://aka.ms/python-webapps-actions
+#
+# Manual trigger only. The Azure App Service this deploys to has been torn
+# down, so running on every push to main only put a red X on every commit.
+# The workflow is kept so the deployment can be re-created and this run from
+# the Actions tab -- restore the `push` trigger at that point.
 
 name: Build and deploy Python app to Azure Web App - bloomai-hackathon-prd-wa-uaen-01
 
 on:
-  push:
-    branches:
-      - main
   workflow_dispatch:
 
 jobs:
@@ -24,26 +26,27 @@ jobs:
         with:
           python-version: '3.12'
 
-      - name: Create and start virtual environment
-        run: |
-          python -m venv venv
-          source venv/bin/activate
-      
       - name: Install dependencies
         run: pip install -r requirements.txt
-        
+
       # Optional: Add step to run tests here (PyTest, Django test suites, etc.)
 
       - name: Zip artifact for deployment
-        run: zip release.zip ./* -r
+        # The venv exclusions matter because Azure builds its own environment;
+        # the .env exclusion matters more, since a build artifact is
+        # downloadable by anyone with read access to the repo's Actions tab.
+        run: |
+          zip release.zip ./* -r \
+            -x 'venv/*' '*/venv/*' '.venv/*' '*/.venv/*' \
+            -x '.env' '*/.env' \
+            -x '*.pyc' '*__pycache__*' \
+            -x '*/node_modules/*' '*/db.sqlite3'
 
       - name: Upload artifact for deployment jobs
         uses: actions/upload-artifact@v4
         with:
           name: python-app
-          path: |
-            release.zip
-            !venv/
+          path: release.zip
 
   deploy:
     runs-on: ubuntu-latest
@@ -51,7 +54,7 @@ jobs:
     environment:
       name: 'Production'
       url: ${{ steps.deploy-to-webapp.outputs.webapp-url }}
-    
+
     steps:
       - name: Download artifact from build job
         uses: actions/download-artifact@v4
@@ -61,7 +64,6 @@ jobs:
       - name: Unzip artifact for deployment
         run: unzip release.zip
 
-      
       - name: 'Deploy to Azure Web App'
         uses: azure/webapps-deploy@v3
         id: deploy-to-webapp

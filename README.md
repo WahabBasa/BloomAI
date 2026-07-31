@@ -1,531 +1,235 @@
-# Active Recall Learning System
+# BloomAI — Active Recall Learning System
 
-An AI-powered educational platform that transforms PDF documents into interactive learning experiences using active recall methodology.
+Upload a PDF, get practice questions generated from it, answer them in your own
+words, and have those answers graded with written feedback.
 
-**What it does:** Automatically generates practice questions from study materials and provides intelligent feedback to improve learning retention.
+The idea is active recall: you learn more by trying to retrieve something from
+memory than by rereading it. The hard part of doing that with your own study
+material is writing the questions, so this writes them for you — from your
+document, not from a generic question bank — and then marks what you write back.
 
-🔗 **Live Demo:** [Try it here](https://zealous-water-00b4c1200.6.azurestaticapps.net)
-
----
-
-## How It Works
-
-The system implements the active recall learning technique, where learners retrieve information from memory rather than passively reviewing content. This method has been proven to improve retention by up to 50%.
-
-**User Flow:**
-1. Upload a PDF study document
-2. AI processes content and generates targeted questions
-3. Complete practice sessions with instant feedback
-4. Review detailed explanations and track progress
-
-**Core Benefits:**
-- Stronger memory formation through retrieval practice
-- Immediate feedback with detailed explanations
-- Personalized question generation from your materials
-- Progress tracking to identify knowledge gaps
+> **Live demo:** currently offline. The Azure resources behind the original
+> hackathon deployment were torn down; the app is being redeployed and this
+> section will link to it again when it is back. Everything below runs locally.
 
 ---
 
-## System Architecture
+## How it works
 
 ```
-┌─────────────┐    HTTP/JSON    ┌─────────────┐    Python     ┌─────────────┐
-│   Vue.js    │ ────────────── │   Django    │ ──────────── │ AI Agents   │
-│  Frontend   │                │   Backend   │              │ (OpenAI)    │
-│             │                │             │              │             │
-│ • UI/UX     │                │ • REST API  │              │ • PDF Extract│
-│ • State     │                │ • Database  │              │ • Q Generator│
-│ • Routing   │                │ • Business  │              │ • A Generator│
-└─────────────┘                └─────────────┘              │ • Grader    │
-                                                             └─────────────┘
+  Vue 3 SPA                Django                        OpenAI
+ ┌───────────┐  HTTP/JSON ┌────────────────┐            ┌──────────────────┐
+ │ Upload    │───────────▶│ views.py       │            │ Question         │
+ │ Practice  │            │  (plain JSON   │            │  generator agent │
+ │ Results   │◀───────────│   views)       │            │ Answer           │
+ └───────────┘            │       │        │───────────▶│  generator agent │
+                          │       ▼        │            │ Grading agent    │
+                          │ recall_service │            └──────────────────┘
+                          │       │        │
+                          │       ▼        │            ┌──────────────────┐
+                          │ SQLite         │            │ PDFExtractorTool │
+                          └────────────────┘            │  (PyPDF2, local) │
+                                                        └──────────────────┘
 ```
 
-**Technology Stack:**
-- **Frontend:** Vue.js 3, Pinia, Vue Router
-- **Backend:** Django, Django REST Framework
-- **AI Framework:** Atomic Agents with OpenAI GPT-4
-- **Database:** SQLite (development) / PostgreSQL (production)
-- **Deployment:** Azure Web Apps + Azure Static Web Apps
+Uploading a PDF runs the whole pipeline synchronously, in the request:
+
+1. `PDFExtractorTool` pulls text and metadata out of the file with PyPDF2. This
+   is a local tool, not a model call.
+2. The **question generator agent** reads the extracted text and returns five
+   active recall questions.
+3. The **answer generator agent** reads the same text plus those questions and
+   returns one reference explanation per question.
+4. Both are saved, and the browser is sent to the practice view.
+
+Answering a question posts it to the backend, where the **grading agent**
+compares it against the reference explanation and returns a score of 0, 0.5 or
+1 — stored as 0, 50 or 100 — together with feedback explaining the score.
+
+Three agents, one tool. All three agents run `gpt-4o-mini`.
+
+### Stack
+
+| | |
+|---|---|
+| Frontend | Vue 3, Pinia, Vue Router, Vite |
+| Backend | Django 5.2 — plain function-based views returning `JsonResponse`. There is no Django REST Framework in this project. |
+| Agents | [atomic-agents](https://github.com/BrainBlend-AI/atomic-agents) 1.1.0 + [instructor](https://github.com/instructor-ai/instructor), against OpenAI `gpt-4o-mini` |
+| PDF | PyPDF2 |
+| Database | SQLite. Nothing in the code configures Postgres. |
 
 ---
 
-## Features
+## Running it locally
 
-### Core Functionality
-- **PDF Processing:** Extract text content and metadata from educational documents
-- **Intelligent Question Generation:** Create targeted active recall questions using AI
-- **Automated Grading:** Evaluate responses with partial credit and detailed feedback
-- **Progress Tracking:** Monitor learning performance across sessions
-- **Responsive Design:** Works on desktop and mobile devices
+**Prerequisites:** Python 3.12, Node 18+, and an
+[OpenAI API key](https://platform.openai.com/api-keys).
 
-### AI Capabilities
-- Natural language understanding of educational content
-- Context-aware question generation
-- Nuanced answer evaluation beyond exact matching
-- Detailed explanations that reinforce learning concepts
+### Backend
 
----
+`requirements.txt` is at the **repository root**, not in `Backend/`.
 
-## Quick Start
-
-### Prerequisites
-- Python 3.8+
-- Node.js 16+
-- OpenAI API key ([get one here](https://platform.openai.com/api-keys))
-
-### Installation
-
-1. **Clone repository**
 ```bash
-git clone <repository-url>
-cd active-recall-system
-```
-
-2. **Backend setup**
-```bash
-cd Backend
+python -m venv .venv
+source .venv/bin/activate        # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
-echo "OPENAI_API_KEY=your_key_here" > .env
+
+cp Backend/.env.example Backend/.env   # then edit it, see below
+cd Backend
 python manage.py migrate
-python manage.py runserver
+python manage.py runserver             # http://localhost:8000
 ```
 
-3. **Frontend setup** (new terminal)
+`Backend/.env` — copy from `Backend/.env.example`:
+
+| Variable | Required | Notes |
+|---|---|---|
+| `OPENAI_API_KEY` | To process documents | Needed only when a request actually calls a model. `manage.py migrate`, `check`, `test` and friends all run without it. |
+| `DJANGO_DEBUG` | For local dev | `True` puts `localhost` in `ALLOWED_HOSTS` and `http://localhost:5173` in the CORS allowlist. Without it a local server answers every request with HTTP 400. Defaults to `False`. |
+| `DJANGO_SECRET_KEY` | For deployment | Falls back to the insecure development key if unset. |
+
+### Frontend
+
 ```bash
 cd Frontend
 npm install
-npm run dev
+npm run dev                      # http://localhost:5173
 ```
 
-4. **Access application**
-- Frontend: `http://localhost:5173`
-- Backend API: `http://localhost:8000`
+No frontend configuration is needed for local development: the API service
+defaults to the relative path `/api`, and the Vite dev server proxies that to
+`http://localhost:8000` (see `vite.config.js`). To point a deployed frontend at
+a backend on another origin, set `VITE_API_BASE_URL` — see
+`Frontend/.env.example`.
+
+### Try it
+
+Open http://localhost:5173, upload a PDF, wait for the questions to generate
+(a few seconds — three model calls happen in that one request), answer them,
+and finish the test to see your marks, the grader's feedback, and the reference
+explanations.
+
+`python manage.py createsuperuser` plus http://localhost:8000/admin/ gives you a
+look at the stored documents, questions and answers.
 
 ---
 
-## Backend Architecture
+## API
 
-### Django Application Structure
+All endpoints return JSON. There is no authentication.
+
+| Method | Path | Purpose |
+|---|---|---|
+| `POST` | `/api/documents/upload/` | Upload a PDF (multipart, field `file`). Extracts text, generates questions and explanations, returns `document_id` and `questions_count`. |
+| `GET` | `/api/documents/` | List documents with title, upload time, page count, question count. |
+| `GET` | `/api/documents/<document_id>/` | One document plus its questions. |
+| `GET` | `/api/documents/<document_id>/questions/` | Questions for a document, each with its explanation and the most recent mark and feedback. |
+| `GET` | `/api/questions/<question_id>/` | One question plus every answer submitted to it. |
+| `POST` | `/api/questions/<question_id>/answer/` | Submit `{"answer": "..."}`. Grades it and returns `mark` (0/50/100) and `feedback`. |
+| `GET` | `/api/answers/<answer_id>/` | One graded answer. |
+
+Malformed UUIDs return 400, unknown IDs 404, wrong methods 405. Errors are
+logged server-side and reported to the client generically.
+
+---
+
+## Layout
 
 ```
+requirements.txt              # backend dependencies (repo root)
 Backend/
-├── recall_system/          # Django project settings
-├── main_system/            # Main application
-│   ├── agents/            # AI agent implementations
-│   ├── services/          # Business logic layer
-│   ├── models.py          # Database models
-│   ├── views.py           # API endpoints
-│   └── tools/             # Utility tools
-└── manage.py
+  manage.py
+  recall_system/
+    settings.py               # loads Backend/.env; DEBUG from DJANGO_DEBUG
+    urls.py                   # every route, all under /api/
+  main_system/
+    views.py                  # the JSON endpoints
+    models.py                 # Document, Question, UserAnswer
+    admin.py
+    services/recall_service.py   # orchestrates tool + agents
+    agents/
+      llm_client.py           # lazily built, shared OpenAI client
+      agents/
+        qgen_agent.py         # question generator
+        agen_agent.py         # answer/explanation generator
+        g_agent.py            # grader
+    tools/content_extractor.py   # PDFExtractorTool (PyPDF2)
+Frontend/
+  src/
+    views/                    # UploadView, TestView, ResultsView
+    components/               # UploadForm, QuestionCard, ResultItem, ...
+    stores/testStore.js       # Pinia store
+    services/apiService.js    # fetch wrapper
 ```
 
-### Database Models
+### Data model
 
 ```python
-class Document(models.Model):
-    document_id = models.UUIDField(primary_key=True, default=uuid.uuid4)
-    title = models.CharField(max_length=255)
-    file_path = models.CharField(max_length=255)
-    content = models.TextField()  # Extracted text
-    page_count = models.IntegerField()
-    uploaded_at = models.DateTimeField(auto_now_add=True)
+class Document:
+    document_id, title, file_path, content, page_count, author,
+    created_date, uploaded_at
 
-class Question(models.Model):
-    question_id = models.UUIDField(primary_key=True, default=uuid.uuid4)
-    document = models.ForeignKey(Document, on_delete=models.CASCADE)
-    question_text = models.TextField()
-    answer_explanation = models.TextField()
-    created_at = models.DateTimeField(auto_now_add=True)
+class Question:
+    question_id, document (FK), question_text, answer_explanation, created_at
 
-class UserAnswer(models.Model):
-    answer_id = models.UUIDField(primary_key=True, default=uuid.uuid4)
-    question = models.ForeignKey(Question, on_delete=models.CASCADE)
-    user_answer = models.TextField()
-    mark = models.IntegerField()  # 0, 50, or 100
-    submitted_at = models.DateTimeField(auto_now_add=True)
+class UserAnswer:
+    answer_id, question (FK), user_answer,
+    mark,        # 0, 50 or 100 — null until graded
+    feedback,    # the grader's written explanation of the mark
+    submitted_at
 ```
 
-### API Endpoints
+### Agents
 
-**Document Management:**
-```http
-POST   /api/documents/upload/              # Upload and process PDF
-GET    /api/documents/                     # List all documents
-GET    /api/documents/{id}/                # Get document details
-```
+Each agent is built **per request** by a factory —
+`build_question_agent`, `build_answer_agent`, `build_grading_agent` — called
+inside `process_pdf` or `grade_answer`.
 
-**Question & Answer Flow:**
-```http
-GET    /api/documents/{id}/questions/      # Get questions for document
-GET    /api/questions/{id}/                # Get specific question
-POST   /api/questions/{id}/answer/         # Submit answer
-GET    /api/answers/{id}/                  # Get graded answer
-```
+This matters. `atomic_agents.BaseAgent` accumulates every input and response in
+an `AgentMemory` and replays the whole history on each subsequent call. As
+module-level singletons the agents re-sent every document they had ever seen on
+every new request: token cost grew with process uptime, each document was
+generated in the context of the last, and concurrent requests raced on shared
+mutable context providers. Building them per request means each call starts
+with empty memory and its own context.
 
-### Service Layer
+The OpenAI client is the one shared piece — it holds a connection pool but no
+per-request state, and it is constructed lazily so importing the agents does
+not require an API key.
 
-The `recall_service.py` orchestrates the AI agent workflow:
-
-```python
-def process_pdf(document_id):
-    """Complete PDF processing pipeline"""
-    # 1. Extract content using PDFExtractorTool
-    # 2. Generate questions using QuestionGenerator
-    # 3. Create explanations using AnswerGenerator
-    # 4. Store everything in database
-    
-def grade_answer(answer_id):
-    """Evaluate user response"""
-    # 1. Retrieve user answer and question context
-    # 2. Use GradingAgent for evaluation
-    # 3. Store grade and feedback
-```
+Each agent takes its bulk context (the document, or the answer being graded)
+through an atomic-agents *context provider*, which lands in the system prompt,
+and its request through a Pydantic input schema. Outputs are Pydantic schemas
+too, so instructor validates the model's JSON before it reaches the database.
 
 ---
 
-## AI Agents Implementation
+## Notes and limitations
 
-### Atomic Agents Framework
-
-The system uses four specialized AI agents built on the Atomic Agents framework, which provides:
-- Structured input/output schemas with Pydantic
-- Consistent prompt engineering patterns
-- Easy integration with OpenAI models
-- Type-safe agent interactions
-
-### Agent Specifications
-
-#### 1. PDF Extractor Tool
-```python
-class PDFExtractorTool(BaseTool):
-    """Extracts text content and metadata from PDF files"""
-    
-    input_schema = PDFExtractorToolInputSchema
-    output_schema = PDFExtractorToolOutputSchema
-    
-    # Uses PyPDF2 for text extraction
-    # Handles metadata extraction (title, author, dates)
-    # Returns structured content for further processing
-```
-
-#### 2. Question Generator Agent
-```python
-active_recall_agent = BaseAgent(
-    model="gpt-4o-mini",
-    system_prompt_generator=SystemPromptGenerator(
-        background=[
-            "Expert at generating effective active recall questions",
-            "Focuses on key concepts and relationships",
-            "Creates questions that promote deep learning"
-        ],
-        steps=[
-            "Analyze content for key concepts",
-            "Create targeted recall questions",
-            "Format in markdown"
-        ]
-    )
-)
-```
-
-#### 3. Answer Generator Agent
-```python
-answer_generator_agent = BaseAgent(
-    model="gpt-4o-mini",
-    system_prompt_generator=SystemPromptGenerator(
-        background=[
-            "Generates comprehensive explanations",
-            "Provides correct answers with reasoning",
-            "Reinforces conceptual understanding"
-        ],
-        output_instructions=[
-            "Include both answer and reasoning",
-            "Base explanations on source material",
-            "Ensure educational value"
-        ]
-    )
-)
-```
-
-#### 4. Grading Agent
-```python
-grading_agent = BaseAgent(
-    model="gpt-4o-mini",
-    system_prompt_generator=SystemPromptGenerator(
-        background=[
-            "Expert at evaluating learning responses",
-            "Focuses on conceptual understanding",
-            "Provides fair and objective assessment"
-        ],
-        output_instructions=[
-            "Score: 0 (incorrect), 0.5 (partial), 1 (correct)",
-            "Evaluate understanding, not exact wording",
-            "Provide constructive feedback"
-        ]
-    )
-)
-```
+- Question generation is fixed at five questions per document
+  (`DEFAULT_QUESTION_COUNT` in `recall_service.py`).
+- Upload is synchronous: the HTTP request is held open for three model calls.
+  Large PDFs will feel slow and can hit a proxy timeout. A task queue is the
+  obvious next step.
+- There are no user accounts. Every document is visible to everyone, and the
+  browser tracks "your" current document in `localStorage`.
+- PDF only. Scanned PDFs with no text layer extract nothing — there is no OCR.
+- No rate limiting or upload size cap, so anyone who can reach the server can
+  spend your OpenAI credit.
 
 ---
 
-## Frontend Architecture
+## Deployment
 
-### Vue.js Application Structure
-
-```
-Frontend/src/
-├── components/          # Reusable UI components
-│   ├── UploadForm.vue
-│   ├── QuestionCard.vue
-│   ├── NavigationButtons.vue
-│   └── ResultItem.vue
-├── views/              # Page-level components
-│   ├── UploadView.vue
-│   ├── TestView.vue
-│   └── ResultsView.vue
-├── stores/             # Pinia state management
-│   └── testStore.js
-├── services/           # API integration
-│   └── apiService.js
-└── router/
-    └── index.js
-```
-
-### State Management with Pinia
-
-```javascript
-export const useTestStore = defineStore('test', {
-  state: () => ({
-    documentId: null,
-    questions: [],
-    currentQuestionIndex: 0,
-    userAnswers: {},
-    isTestCompleted: false
-  }),
-  
-  getters: {
-    currentQuestion: (state) => state.questions[state.currentQuestionIndex],
-    totalQuestions: (state) => state.questions.length,
-    results: (state) => /* computed results with grades */
-  },
-  
-  actions: {
-    async loadQuestions(documentId) { /* fetch from API */ },
-    async submitAnswer(questionId, answer) { /* submit and grade */ },
-    nextQuestion() { /* navigation logic */ }
-  }
-})
-```
-
-### API Service Layer
-
-```javascript
-const apiService = {
-  async uploadDocument(file) {
-    const formData = new FormData();
-    formData.append('file', file);
-    return await fetch(`${API_BASE_URL}/documents/upload/`, {
-      method: 'POST',
-      body: formData
-    });
-  },
-  
-  async getQuestions(documentId) {
-    return await fetch(`${API_BASE_URL}/documents/${documentId}/questions/`);
-  },
-  
-  async submitAnswer(questionId, answer) {
-    return await fetch(`${API_BASE_URL}/questions/${questionId}/answer/`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ answer })
-    });
-  }
-}
-```
+Both GitHub Actions workflows in `.github/workflows/` target Azure resources
+that no longer exist, so they are set to `workflow_dispatch` (manual) only. To
+redeploy: re-create the App Service and Static Web App, restore the `push`
+triggers, and set `OPENAI_API_KEY` and `DJANGO_SECRET_KEY` in the App Service
+configuration. The Azure hostnames are still in `ALLOWED_HOSTS` and
+`CORS_ALLOWED_ORIGINS`.
 
 ---
 
-## Azure Deployment Architecture
+## License
 
-### Production Infrastructure
-
-**Backend (Azure Web Apps):**
-- **Service:** Azure App Service (Linux, Python 3.8)
-- **URL:** `bloomai-hackathon-prd-wa-uaen-01-eaezdxhbegfvhgd7.uaenorth-01.azurewebsites.net`
-- **Database:** SQLite (can be upgraded to Azure Database for PostgreSQL)
-- **Environment Variables:** Configured in Azure App Service settings
-
-**Frontend (Azure Static Web Apps):**
-- **Service:** Azure Static Web Apps
-- **URL:** `zealous-water-00b4c1200.6.azurestaticapps.net`
-- **Build:** Automatic deployment from GitHub repository
-- **CDN:** Global content delivery for optimal performance
-
-**Cross-Origin Configuration:**
-```python
-# Django settings
-CORS_ALLOWED_ORIGINS = [
-    "https://zealous-water-00b4c1200.6.azurestaticapps.net"
-]
-```
-
-### Environment Configuration
-
-**Production Environment Variables:**
-```bash
-OPENAI_API_KEY=sk-...
-DJANGO_SECRET_KEY=...
-DEBUG=False
-ALLOWED_HOSTS=bloomai-hackathon-prd-wa-uaen-01-eaezdxhbegfvhgd7.uaenorth-01.azurewebsites.net
-```
-
----
-
-## Development Workflow
-
-### Setting Up Development Environment
-
-1. **Backend Development:**
-```bash
-cd Backend
-python -m venv venv
-source venv/bin/activate
-pip install -r requirements.txt
-python manage.py migrate
-python manage.py runserver
-```
-
-2. **Frontend Development:**
-```bash
-cd Frontend
-npm install
-npm run dev
-```
-
-3. **Environment Variables:**
-Create `Backend/.env`:
-```
-OPENAI_API_KEY=your_openai_api_key
-DJANGO_SECRET_KEY=your_django_secret_key
-DEBUG=True
-```
-
-### Testing the System
-
-1. **Upload a PDF:** Use the frontend to upload a test document
-2. **Verify Processing:** Check Django admin or database for extracted content
-3. **Test Questions:** Ensure questions are generated and stored correctly
-4. **Test Grading:** Submit answers and verify grading logic
-5. **Check Results:** Confirm proper display of scores and explanations
-
----
-
-## Configuration Options
-
-### AI Model Configuration
-
-**Switching OpenAI Models:**
-```python
-# In agent configurations
-model="gpt-4o-mini"  # Fast, cost-effective
-model="gpt-4"        # Higher quality, more expensive
-model="gpt-3.5-turbo"  # Balanced option
-```
-
-**Adjusting Question Count:**
-```python
-# In qgen_agent.py
-question_count: Optional[int] = Field(5, description="Number of questions")
-```
-
-### Database Configuration
-
-**Development (SQLite):**
-```python
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-    }
-}
-```
-
-**Production (PostgreSQL):**
-```python
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'your_db_name',
-        'USER': 'your_db_user',
-        'PASSWORD': 'your_db_password',
-        'HOST': 'your_db_host',
-        'PORT': '5432',
-    }
-}
-```
-
----
-
-## Key Dependencies
-
-### Backend Dependencies
-```
-Django==5.2
-openai==1.x.x
-instructor==0.x.x
-atomic-agents==x.x.x
-PyPDF2==3.x.x
-django-cors-headers==4.x.x
-python-dotenv==1.x.x
-pydantic==2.x.x
-```
-
-### Frontend Dependencies
-```
-vue@3.5.13
-pinia@3.0.1
-vue-router@4.5.0
-vite@6.2.4
-```
-
----
-
-## Educational Methodology
-
-### Active Recall Principles
-
-The system implements evidence-based learning techniques:
-
-**Retrieval Practice:** Forces users to recall information from memory, strengthening neural pathways more effectively than passive review.
-
-**Immediate Feedback:** Provides instant grading and explanations, crucial for correcting misconceptions and reinforcing correct understanding.
-
-**Spaced Repetition Ready:** The grading system supports future implementation of spaced repetition algorithms where items are reviewed at increasing intervals.
-
-**Metacognitive Awareness:** Detailed explanations help learners understand not just what the correct answer is, but why it's correct.
-
----
-
-## Future Enhancement Opportunities
-
-### Technical Improvements
-- **Advanced PDF Processing:** Support for images, tables, and complex layouts
-- **Multiple File Formats:** Word documents, PowerPoint, web articles
-- **Real-time Collaboration:** Multi-user study sessions
-- **Mobile Apps:** Native iOS/Android applications
-
-### AI Enhancements
-- **Adaptive Difficulty:** Questions that adjust to user performance
-- **Learning Path Optimization:** AI-driven study recommendations
-- **Multi-modal Content:** Questions incorporating images and diagrams
-- **Personalized Explanations:** Tailored to individual learning styles
-
-### Educational Features
-- **Spaced Repetition:** Intelligent review scheduling
-- **Progress Analytics:** Detailed learning insights and trends
-- **Study Groups:** Collaborative learning features
-- **Gamification:** Achievement systems and learning streaks
-
----
-
-This system demonstrates a practical application of AI in education, combining modern web technologies with proven learning science to create an effective study tool. The modular architecture makes it easy to extend and customize for different educational contexts.
+MIT — see [LICENSE](LICENSE).
