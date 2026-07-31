@@ -1,0 +1,37 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+
+# Virtual environments
+venv/
+.venv/
+env/
+
+# Environment / secrets
+.env
+.env.*
+!.env.example
+
+# Django
+*.sqlite3
+*.sqlite3-journal
+staticfiles/
+media/
+
+# User uploads (never commit study material)
+Backend/uploads/*
+!Backend/uploads/.gitkeep
+
+# Node / frontend build
+node_modules/
+dist/
+dist-ssr/
+*.local
+
+# Editors / OS
+.DS_Store
+Thumbs.db
+.idea/
+*.swp
